@@ -1,5 +1,7 @@
 const express = require("express");
-const {users} = require("./Data/users.json")
+
+const usersRouter = require("./Routes/users.js");
+const booksRouter = require("./Routes/books.js");
 
 const app = express();
 
@@ -7,24 +9,16 @@ const PORT = 8081;
 
 app.use(express.json());
 
+// http://localhost:8081/
 app.get("/",(req,res) => {
     res.status(200).json({
         message : "Server is up and Running!!",
     });
 });
 
-// Route: /users
-// Method: GET
-// Description: Get all users
-// Access: Public
-// Parameters: None
-
-app.get("/users", (req,res) => {
-    res.status(200).json({
-        success: true,
-        data: users,
-    });
-});
+// http://localhost:8081/users
+app.use("/users", usersRouter);
+app.use("/books", booksRouter);
 
 app.get("*", (req,res) => {
     res.status(404).json({
