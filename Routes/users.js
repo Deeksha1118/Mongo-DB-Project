@@ -167,22 +167,44 @@ router.get("/subscription-details/:id", (req,res) => {
             date = new Date(data);    // date that we give
         }
         // to get to know how many days
-        let days = Math.floor(data / (1000 * 60 * 60 * 24));  //floor(2.7) = 2  // (milesec * sec * min * hr)
+        let days = Math.floor(date / (1000 * 60 * 60 * 24));  //floor(2.7) = 2  // (milesec * sec * min * hr)
         return days;
     };
 
     const subscriptionType = (date) => {
-        if(user.subscriptionType = "Basic") {
+        if(user.subscriptionType == "Basic") {
             date = date + 90;
         }
-        else if(user.subscriptionType = "Standard") {
+        else if(user.subscriptionType == "Standard") {
             date = date + 180;
         }
-        else if(user.subscriptionType = "Premium") {
+        else if(user.subscriptionType == "Premium") {
             date = date + 365;
         }
         return date;
     };
+    // date has been calculating acc to Jan 1 1970 UTC 
+    let returnDate = getDateInDays(user.returnDate);
+    let currentDate = getDateInDays();
+    let subscriptionDate = getDateInDays(user.subscriptionDate);
+    let subscriptionExpire = subscriptionType(subscriptionDate);
+
+    // console.log("returnDate :", returnDate);
+    // console.log("currentDate :", currentDate);
+    // console.log("subscriptionDate :", subscriptionDate);
+    // console.log("subscriptionExpire :", subscriptionExpire);
+
+    const data = {
+        ...user,
+        isSubscriptionExpired : subscriptionExpire < currentDate,
+        daysLeftForExpiration : subscriptionExpire <= currentDate ? 0 : subscriptionExpire - currentDate,
+        fine : returnDate < currentDate ? subscriptionExpire <= currentDate ? 100 : 50 : 0,
+    };
+    return res.status(200).json({
+        success : true,
+        message : "Subscription detail for the user is :",
+        data,
+    })
 });
 
 module.exports = router;
