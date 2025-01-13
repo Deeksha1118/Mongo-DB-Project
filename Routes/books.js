@@ -1,6 +1,10 @@
 const express = require("express");
 const {books} = require("../Data/books.json");
 const {users} = require("../Data/users.json");
+const {getAllBooks, getSingleBookById, getAllIssuedBooks} = require("../Contollers/book-controller.js");
+
+
+const { BookModal, UserModal } = require("../Modals/index");
 
 const router = express.Router();
 
@@ -10,13 +14,7 @@ const router = express.Router();
 // Access: Public
 // Parameters: None
 
-router.get("/", (req,res) => {
-    res.status(200).json({
-        success : true,
-        message : "Got all the books",
-        data : books,
-    });
-});
+router.get("/", getAllBooks);
 
 // Route: /books/issued
 // Method: GET
@@ -24,33 +22,7 @@ router.get("/", (req,res) => {
 // Access: Public
 // Parameters: None
 
-router.get("/issued", (req,res) => {
-    const userWithIssuedBook = users.filter((each) => {  //we are not using single user thats why we use filter
-        if(each.issuedBook) return each;
-    });
-    
-    const issuedBooks = [];    //store all the issuedBook
-    userWithIssuedBook.forEach((each) => {
-        const book = books.find((book) => book.id === each.issuedBook);
-
-        book.issuedBy = each.name;
-        book.issuedDate = each.issuedDate;
-        book.returnDate = each.returnDate;
-
-        issuedBooks.push(book);
-    });
-    if (issuedBooks.length === 0) {
-        return res.status(404).json({
-            success : false,
-            message : "No Book Have Been Issued Yet..",
-        });
-    }
-    return res.status(200).json({
-        success : true,
-        message : "Users with the issued Books...",
-        data : issuedBooks,  
-    });
-});
+router.get("/issued", getAllIssuedBooks);
 
 // Route: /:id
 // Method: GET
@@ -58,21 +30,7 @@ router.get("/issued", (req,res) => {
 // Access: Public
 // Parameters: id
 
-router.get("/:id", (req,res) => {
-    const {id} = req.params;
-    const book = books.find((each) => each.id === id)
-    if(!book) {
-        return res.status(404).json({
-            success : false,
-            message : "Book Doesn't Exist !!",
-        });
-    }
-    return res.status(200).json({
-        success : true,
-        message : "Book Found by their ID",
-        data : book,
-    });
-});
+router.get("/:id", getSingleBookById);
 
 // Route: /
 // Method: POST
