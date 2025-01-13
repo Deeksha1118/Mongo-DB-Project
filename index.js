@@ -1,9 +1,16 @@
 const express = require("express");
+const dotenv = require("dotenv");
 
 const usersRouter = require("./Routes/users.js");
 const booksRouter = require("./Routes/books.js");
 
+const DBconnection = require("./DataBase_Connention.js")
+
+dotenv.config();  //activate ur .env file
+
 const app = express();
+
+DBconnection();
 
 const PORT = 8081;
 
