@@ -1,5 +1,6 @@
 const express = require("express");
 const {users} = require("../Data/users.json");
+const{getAllUsers, getSingleUserById, addNewUser, updateUserById, deleteUserById} = require("../Contollers/user-controller.js");
 
 const { BookModal, UserModal } = require("../Modals/index");
 
@@ -15,13 +16,7 @@ const router = express.Router();
 const { Router } = require("express");
 
 // http://localhost:8081/users
-router.get("/", (req,res) => {
-    res.status(200).json({
-        success: true,
-        message : "Got all the Users",
-        data: users,
-    });
-});
+router.get("/", getAllUsers);
 
 // Route: /:id
 // Method: GET
@@ -30,22 +25,7 @@ router.get("/", (req,res) => {
 // Parameters: id
 
 // http://localhost:8081/users/id
-router.get("/:id",(req,res) => {
-    // const id = req.params.id;
-    const {id} = req.params;
-    const user = users.find((each) => each.id === id);
-    if(!user) {
-        return res.status(404).json({
-            success : false,
-            message : "User Doesn't Exist !!",
-        });
-    }
-    return res.status(200).json({
-        success : true,
-        message : "User Found",
-        data : user,
-    });
-});
+router.get("/:id", getSingleUserById);
 
 // Route: /
 // Method: POST
@@ -55,33 +35,7 @@ router.get("/:id",(req,res) => {
 // Data: id, name, surname, email, issuedBook, issuedDate, returnDate, subscriptionType, subscriptionDate
 
 // http://localhost:8081/users
-router.post("/", (req,res) => {
-    const {id, name, surname, email, issuedBook, issuedDate, returnDate, subscriptionType, subscriptionDate} = req.body;
-    const user = users.find((each) => each.id === id);
-    if(user) {
-        return res.status(404).json({
-            success : false,
-            message : "User Already Exixts",
-        });
-    }
-
-    users.push({
-        id, 
-        name, 
-        surname, 
-        email, 
-        issuedBook, 
-        issuedDate, 
-        returnDate, 
-        subscriptionType, 
-        subscriptionDate,
-    });
-    return res.status(201).json({
-        success : true,
-        message : "User Added Successfully!!",
-        data : users,
-    });
-});
+router.post("/", addNewUser);
 
 // Route: /:id
 // Method: PUT
@@ -90,32 +44,7 @@ router.post("/", (req,res) => {
 // Parameters: ID
 // Data: id, name, surname, email, issuedBook, issuedDate, returnDate, subscriptionType, subscriptionDate
 
-router.put("/:id", (req,res) => {
-   const {id} = req.params;
-   const {data} = req.body;
-   
-   const user = users.find((each) => each.id === id);
-    if(!user) {
-        return res.status(404).json({
-            success : false,
-            message : "User Doesn't Exist !!",
-        });
-    }
-    const updateUserData = users.map((each) => {
-        if(each.id === id){
-            return {
-                ...each,   //each data
-                ...data,   //data we write in body
-            };
-        }
-        return each;
-    });
-    return res.status(200).json({
-        success : true,
-        message : "User Updated!!",
-        data : updateUserData,    
-    });
-});
+router.put("/:id", updateUserById);
 
 // Route: /:id
 // Method: DELETE
@@ -123,90 +52,6 @@ router.put("/:id", (req,res) => {
 // Access: Public
 // Parameters: ID
 
-router.delete("/:id", (req,res) => {
-    const {id} = req.params;
-
-    const user = users.find((each) => each.id === id);
-    if(!user) {
-        return res.status(404).json({
-            success : false,
-            message : "User Doesn't Exist !!",
-        });
-    }   
-    const index = users.indexOf(user);    //here users is array
-    users.splice(index, 1);
-
-    return res.status(200).json({
-        success : true,
-        message : "User got deleted...",
-        data : users,
-    });
-});
-
-// Route: /subscription-details/:id
-// Method: GET
-// Description: Get all user subscription details
-// Access: Public
-// Parameters: ID
-
-router.get("/subscription-details/:id", (req,res) => {
-    const {id} = req.params;
-    const user = users.find((each) => each.id === id);
-
-    if(!user) {
-        return res.status(404).json({
-            success : false,
-            message : "User Not Found",
-        });
-    }
-
-    const getDateInDays = (data = "") => {
-        let date;
-        if(data === "") {
-            date = new Date();    //current date
-        }
-        else {
-            date = new Date(data);    // date that we give
-        }
-        // to get to know how many days
-        let days = Math.floor(date / (1000 * 60 * 60 * 24));  //floor(2.7) = 2  // (milesec * sec * min * hr)
-        return days;
-    };
-
-    const subscriptionType = (date) => {
-        if(user.subscriptionType == "Basic") {
-            date = date + 90;
-        }
-        else if(user.subscriptionType == "Standard") {
-            date = date + 180;
-        }
-        else if(user.subscriptionType == "Premium") {
-            date = date + 365;
-        }
-        return date;
-    };
-    // date has been calculating acc to Jan 1 1970 UTC 
-    let returnDate = getDateInDays(user.returnDate);
-    let currentDate = getDateInDays();
-    let subscriptionDate = getDateInDays(user.subscriptionDate);
-    let subscriptionExpire = subscriptionType(subscriptionDate);
-
-    // console.log("returnDate :", returnDate);
-    // console.log("currentDate :", currentDate);
-    // console.log("subscriptionDate :", subscriptionDate);
-    // console.log("subscriptionExpire :", subscriptionExpire);
-
-    const data = {
-        ...user,
-        isSubscriptionExpired : subscriptionExpire < currentDate,
-        daysLeftForExpiration : subscriptionExpire <= currentDate ? 0 : subscriptionExpire - currentDate,
-        fine : returnDate < currentDate ? subscriptionExpire <= currentDate ? 100 : 50 : 0,
-    };
-    return res.status(200).json({
-        success : true,
-        message : "Subscription detail for the user is :",
-        data,
-    })
-});
+router.delete("/:id", deleteUserById);
 
 module.exports = router;
